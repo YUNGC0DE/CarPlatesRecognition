@@ -1,16 +1,20 @@
 import copy
+import warnings
+from collections import defaultdict
 
 import cv2
-import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import transforms
 
+from ocr.detector import Detector
+from ocr.recognizer import Recognizer
 from detection.data_utils.data import reformat_coords, plate_in_car
 from detection.utils.thr import thr_output
 from detection.sort import *
 from detection.train_utils.utils import init_model, aggregate_annotation, make_loaders
 
+warnings.filterwarnings("ignore")
 DEVICE = "cuda"
 detector = init_model(weigths="/home/evgenii/Desktop/ml_hw/CarPlates/CarPlatesRecognition/models/best.pth")
 detector.eval()
@@ -25,11 +29,18 @@ def video():
     cap = cv2.VideoCapture("/home/evgenii/Desktop/ml_hw/CarPlates/video.mp4")
     mot_tracker = Sort()
     counter = 0
+    craft = Detector()
+    craft.load()
+
+    recognizer = Recognizer()
+    recognizer.load()
+    bd = defaultdict(int)
     while (cap.isOpened()):
         counter += 1
         print(counter)
         ret, frame = cap.read()
         if ret == True:
+            frame[:, 0:520] = 255
             image = T(cv2.resize(frame, (512, 512))).to(DEVICE)
             with torch.no_grad():
                 output = detector(image.unsqueeze(0))[0]
@@ -56,9 +67,31 @@ def video():
                 idx = plate_in_car(box, tracked_cars, frame.shape[1], frame.shape[0])
                 if not idx:
                     continue
+
+                crop = frame[box[1]: box[3], box[0]:box[2]]
+                roi, _, _, _ = craft.process(crop)
+                full_text = ""
+                for i, img in enumerate(roi):
+                    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    text, _, _ = recognizer.process(gray)
+                    full_text += f"{text} "
+                if len(full_text.replace(" ", "")) == 0:
+                    continue
+
                 cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 3)
-                cv2.putText(frame, f"plate_car_ID: {idx}", (box[0] + 10, box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
+                cv2.putText(frame, f"plate_car_ID: {idx}", (box[0] + 10, box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=1,
                             color=(0, 255, 0), thickness=3)
+
+                full_text = f"ID:{idx}: {full_text}"
+                bd[full_text] += 1
+
+                for i, (k, v) in enumerate(bd.items()):
+                    if v > 15:
+                        cv2.putText(frame, k, (30, 110 * (i + 1)), cv2.FONT_HERSHEY_SIMPLEX,
+                                    fontScale=1.8,
+                                    color=(0, 0, 0), thickness=4)
+
             vid_writer.write(frame)
         else:
             break

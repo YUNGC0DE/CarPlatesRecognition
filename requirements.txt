@@ -6,3 +6,4 @@ opencv_python
 scikit_learn
 tqdm
 xmltodict
+pytesseract
