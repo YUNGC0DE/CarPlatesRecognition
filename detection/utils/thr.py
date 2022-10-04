@@ -23,4 +23,4 @@ def thr_output(output):
     boxes_one_ = boxes_one[boxes_one_idx]
     boxes_two_idx = np.where(scores_two > 0.75)
     boxes_two_ = boxes_two[boxes_two_idx]
-    return boxes_one_, boxes_two_
+    return boxes_one_, scores_one[boxes_one_idx], boxes_two_

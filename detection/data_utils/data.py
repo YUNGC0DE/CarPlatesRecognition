@@ -1,6 +1,7 @@
 import json
 
 import cv2
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import transforms as torch_transforms
@@ -73,3 +74,18 @@ def reformat_coords(box, width, height):
     y1 = int((box[1] / 512) * height)
     y2 = int((box[3] / 512) * height)
     return [x1, y1, x2, y2]
+
+
+def plate_in_car(plate_box, car_boxes, width, height):
+    s_plate_box = (plate_box[2] - plate_box[0]) * (plate_box[3] - plate_box[1])
+    for car_box in car_boxes:
+        plot = np.zeros((height, width))
+        plot[car_box[1]:car_box[3], car_box[0]:car_box[2]] = 1
+        cv2.imwrite("o.png", plot * 255)
+        sum_ = plot[plate_box[1]:plate_box[3], plate_box[0]:plate_box[2]].sum()
+        if sum_ / s_plate_box > 0.8:
+            return car_box[-1]
+    else:
+        return False
+
+
