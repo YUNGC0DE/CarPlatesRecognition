@@ -1,0 +1,6 @@
+.idea
+runs
+models
+*.jpg
+*.png
+*.mp4

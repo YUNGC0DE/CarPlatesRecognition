@@ -39,27 +39,33 @@ def one_image():
 
 
 def video():
+    vid_writer = cv2.VideoWriter("1.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (1920, 1080))
     cap = cv2.VideoCapture("/home/evgenii/Desktop/ml_hw/CarPlates/video.mp4")
+    i = 0
     while (cap.isOpened()):
+        i += 1
+        print(i)
         ret, frame = cap.read()
         if ret == True:
             image = T(cv2.resize(frame, (512, 512))).to(DEVICE)
             with torch.no_grad():
                 output = model(image.unsqueeze(0))[0]
-            boxes_one_all, boxes_two_all = thr_output(output)
+            car_boxes, plate_boxes = thr_output(output)
 
-            for box_one in boxes_one_all:
-                print(box_one)
-                box = reformat_coords(box_one, frame.shape[1], frame.shape[0])
-                print(box)
-                cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (255, 0, 0))
+            for car_box in car_boxes:
+                box = reformat_coords(car_box, frame.shape[1], frame.shape[0])
+                cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (255, 0, 0), 3)
+                cv2.putText(frame, "car", (box[0] + 10, box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
+                            color=(255, 0, 0), thickness=3)
 
-            for box_two in boxes_two_all:
-                box = reformat_coords(box_two, frame.shape[1], frame.shape[0])
-                cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0))
-            cv2.imshow('Frame', frame)
-            #cv2.imwrite(f"kek.png", image_orig)
-
+            for plate_box in plate_boxes:
+                box = reformat_coords(plate_box, frame.shape[1], frame.shape[0])
+                cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 3)
+                cv2.putText(frame, "plate", (box[0] + 10, box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
+                            color=(0, 255, 0), thickness=3)
+            vid_writer.write(frame)
+        else:
+            break
 
 
 def val_set():
@@ -81,5 +87,6 @@ def val_set():
             cv2.rectangle(image, (boxes_two[0], boxes_two[1]), (boxes_two[2], boxes_two[3]), (0, 255, 0))
 
         cv2.imwrite(f"/home/evgenii/Desktop/ml_hw/CarPlates/CarPlatesRecognition/test_images/{idx}.png", image)
+
 
 video()

@@ -19,8 +19,8 @@ def thr_output(output):
     boxes_one = boxes_one[one_idx].cpu().numpy().astype(np.int16)
     scores_two = scores_two[two_idx].cpu().numpy()
     boxes_two = boxes_two[two_idx].cpu().numpy().astype(np.int16)
-    boxes_one_idx = np.where(scores_one > 0.8)
+    boxes_one_idx = np.where(scores_one > 0.75)
     boxes_one_ = boxes_one[boxes_one_idx]
-    boxes_two_idx = np.where(scores_two > 0.8)
+    boxes_two_idx = np.where(scores_two > 0.75)
     boxes_two_ = boxes_two[boxes_two_idx]
     return boxes_one_, boxes_two_
