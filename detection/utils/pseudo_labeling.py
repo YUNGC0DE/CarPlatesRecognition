@@ -14,7 +14,7 @@ model = fasterrcnn_resnet50_fpn(pretrained=True)
 model.eval()
 model.to(device)
 
-files = glob("/home/evgenii/Desktop/ML_HW/car_plates/images/*")
+files = glob("/home/evgenii/Desktop/ml_hw/CarPlates/images/*")
 t = transforms.Compose([transforms.ToPILImage(),
                         transforms.ToTensor()])
 
@@ -52,4 +52,4 @@ for path in tqdm(files):
     with open(path.replace(".png", ".json").replace("images", "ann_json_full"), "w") as ann_f:
         json.dump(ann, ann_f)
 
-    cv2.imwrite("/home/evgenii/Desktop/ML_HW/car_plates/viz/" + img_name, img_orig)
+    cv2.imwrite("/home/evgenii/Desktop/ml_hw/CarPlates/viz" + img_name, img_orig)

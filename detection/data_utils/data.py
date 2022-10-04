@@ -65,3 +65,11 @@ class PlatesDataset(Dataset):
 
     def __len__(self):
         return len(self.images)
+
+
+def reformat_coords(box, width, height):
+    x1 = int((box[0] / 512) * width)
+    x2 = int((box[2] / 512) * width)
+    y1 = int((box[1] / 512) * height)
+    y2 = int((box[3] / 512) * height)
+    return [x1, y1, x2, y2]

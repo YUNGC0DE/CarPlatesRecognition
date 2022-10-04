@@ -5,7 +5,7 @@ import xmltodict
 from glob import glob
 
 
-base_path = "/home/evgenii/Desktop/ML_HW/car_plates/"
+base_path = "/home/evgenii/Desktop/ml_hw/CarPlates"
 files = glob(os.path.join(base_path, "annotations/*"))
 os.makedirs(os.path.join(base_path, "ann_json"), exist_ok=True)
 
